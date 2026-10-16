@@ -11,6 +11,7 @@ import io.kestra.core.http.HttpResponse;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Metric;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.executions.metrics.Counter;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
@@ -20,7 +21,6 @@ import io.kestra.plugin.grafana.loki.models.LokiQueryResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @Getter
@@ -59,7 +59,7 @@ import io.kestra.core.models.annotations.PluginProperty;
                   - id: query
                     type: io.kestra.plugin.grafana.loki.Query
                     url: https://loki.example.com
-                    token: "{{ secret('LOKI_TOKEN') }}"
+                    authToken: "{{ secret('LOKI_TOKEN') }}"
                     tenantId: team-a
                     query: 'sum(rate({namespace="production"}[10m])) by (level)'
                     time: "2024-01-01T12:00:00Z"
@@ -76,7 +76,7 @@ import io.kestra.core.models.annotations.PluginProperty;
                   - id: query
                     type: io.kestra.plugin.grafana.loki.Query
                     url: https://loki.example.com
-                    token: "{{ secret('LOKI_TOKEN') }}"
+                    authToken: "{{ secret('LOKI_TOKEN') }}"
                     query: 'count_over_time({environment="staging"}[1h])'
                     direction: FORWARD
                 """
