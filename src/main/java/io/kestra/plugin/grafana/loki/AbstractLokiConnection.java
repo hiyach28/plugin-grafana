@@ -90,7 +90,7 @@ public abstract class AbstractLokiConnection extends Task {
     }
 
     protected HttpResponse<String> executeGetReq(RunContext runContext, URI uri) throws Exception {
-        return LokiHttpService.executeGetRequest(runContext, uri, authToken, tenantId, connectTimeout);
+        return LokiHttpService.executeGetRequest(runContext, uri, authToken, tenantId, connectTimeout, readTimeout);
     }
 
     protected String buildBaseUrl(RunContext runContext) throws IllegalVariableEvaluationException {

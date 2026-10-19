@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @KestraTest
 class TriggerTest {
@@ -95,5 +96,31 @@ class TriggerTest {
         Optional<Execution> execution = trigger.evaluate(context.getKey(), context.getValue());
 
         assertThat(execution.isPresent(), is(false));
+    }
+
+    @Test
+    void shouldFailWhenLokiRespondsSlowerThanReadTimeout() throws Exception {
+        wireMockServer.stubFor(get(urlPathMatching("/loki/api/v1/query_range.*"))
+            .willReturn(okJson("""
+                {
+                  "status": "success",
+                  "data": {
+                    "resultType": "streams",
+                    "result": []
+                  }
+                }
+                """).withFixedDelay(3000)));
+
+        Trigger trigger = Trigger.builder()
+            .id("loki-" + IdUtils.create())
+            .type(Trigger.class.getName())
+            .url(Property.ofValue(wireMockServer.baseUrl()))
+            .query(Property.ofValue("{job=\"security\"}"))
+            .readTimeout(Property.ofValue(1))
+            .build();
+
+        var context = TestsUtils.mockTrigger(runContextFactory, trigger);
+
+        assertThrows(Exception.class, () -> trigger.evaluate(context.getKey(), context.getValue()));
     }
 }

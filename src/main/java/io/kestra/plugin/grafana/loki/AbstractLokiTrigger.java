@@ -61,7 +61,7 @@ public abstract class AbstractLokiTrigger extends AbstractTrigger {
     protected Property<Integer> readTimeout = Property.ofValue(60);
 
     protected HttpResponse<String> executeGetReq(RunContext runContext, URI uri) throws Exception {
-        return LokiHttpService.executeGetRequest(runContext, uri, authToken, tenantId, connectTimeout);
+        return LokiHttpService.executeGetRequest(runContext, uri, authToken, tenantId, connectTimeout, readTimeout);
     }
 
     protected String buildBaseUrl(RunContext runContext) throws IllegalVariableEvaluationException {

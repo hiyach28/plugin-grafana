@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @KestraTest
 class QueryTest {
@@ -89,6 +90,60 @@ class QueryTest {
             .type(Query.class.getName())
             .url(Property.ofValue(wireMockServer.baseUrl()))
             .query(Property.ofValue("sum(rate({job=\"api\"}[5m]))"))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, Map.of());
+
+        Query.Output output = task.run(runContext);
+
+        assertThat(output.getLogs(), empty());
+    }
+
+    @Test
+    void shouldFailWhenLokiRespondsSlowerThanReadTimeout() {
+        wireMockServer.stubFor(get(urlPathEqualTo("/loki/api/v1/query"))
+            .willReturn(okJson("""
+                {
+                  "status": "success",
+                  "data": {
+                    "resultType": "streams",
+                    "result": []
+                  }
+                }
+                """).withFixedDelay(3000)));
+
+        Query task = Query.builder()
+            .id("query-" + TestsUtils.randomString())
+            .type(Query.class.getName())
+            .url(Property.ofValue(wireMockServer.baseUrl()))
+            .query(Property.ofValue("{job=\"api\"}"))
+            .readTimeout(Property.ofValue(1))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, Map.of());
+
+        assertThrows(Exception.class, () -> task.run(runContext));
+    }
+
+    @Test
+    void shouldSucceedWhenLokiRespondsWithinReadTimeout() throws Exception {
+        wireMockServer.stubFor(get(urlPathEqualTo("/loki/api/v1/query"))
+            .willReturn(okJson("""
+                {
+                  "status": "success",
+                  "data": {
+                    "resultType": "streams",
+                    "result": []
+                  }
+                }
+                """).withFixedDelay(1000)));
+
+        Query task = Query.builder()
+            .id("query-" + TestsUtils.randomString())
+            .type(Query.class.getName())
+            .url(Property.ofValue(wireMockServer.baseUrl()))
+            .query(Property.ofValue("{job=\"api\"}"))
+            .readTimeout(Property.ofValue(5))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, Map.of());
