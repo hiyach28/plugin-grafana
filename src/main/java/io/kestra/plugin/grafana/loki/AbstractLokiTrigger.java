@@ -10,6 +10,7 @@ import io.kestra.core.models.triggers.AbstractTrigger;
 import io.kestra.core.runners.RunContext;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -50,7 +51,7 @@ public abstract class AbstractLokiTrigger extends AbstractTrigger {
     )
     @Builder.Default
     @PluginProperty(group = "execution")
-    protected Property<Integer> connectTimeout = Property.ofValue(30);
+    protected Property<@Min(1) Integer> connectTimeout = Property.ofValue(30);
 
     @Schema(
         title = "HTTP read timeout",
@@ -58,7 +59,7 @@ public abstract class AbstractLokiTrigger extends AbstractTrigger {
     )
     @Builder.Default
     @PluginProperty(group = "execution")
-    protected Property<Integer> readTimeout = Property.ofValue(60);
+    protected Property<@Min(1) Integer> readTimeout = Property.ofValue(60);
 
     protected HttpResponse<String> executeGetReq(RunContext runContext, URI uri) throws Exception {
         return LokiHttpService.executeGetRequest(runContext, uri, authToken, tenantId, connectTimeout, readTimeout);

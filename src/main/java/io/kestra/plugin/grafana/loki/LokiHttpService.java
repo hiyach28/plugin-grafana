@@ -20,7 +20,7 @@ public class LokiHttpService {
 
     public static HttpClient createClient(RunContext runContext, Property<Integer> connectTimeout, Property<Integer> readTimeout) throws IllegalVariableEvaluationException {
         Integer rConnectionTimeout = runContext.render(connectTimeout).as(Integer.class).orElse(30);
-        Integer rReadTimeout = runContext.render(readTimeout).as(Integer.class).orElse(60);
+        var rReadTimeout = runContext.render(readTimeout).as(Integer.class).orElse(60);
 
         HttpConfiguration configuration = HttpConfiguration.builder()
             .timeout(
@@ -68,7 +68,7 @@ public class LokiHttpService {
         Property<String> tenantId,
         Property<Integer> connectTimeout,
         Property<Integer> readTimeout) throws Exception {
-        HttpClient client = createClient(runContext, connectTimeout, readTimeout);
+        var client = createClient(runContext, connectTimeout, readTimeout);
         HttpRequest request = buildRequest(runContext, uri, authToken, tenantId)
             .method("GET")
             .build();
@@ -94,7 +94,7 @@ public class LokiHttpService {
         Property<String> tenantId,
         Property<Integer> connectTimeout,
         Property<Integer> readTimeout) throws Exception {
-        HttpClient client = createClient(runContext, connectTimeout, readTimeout);
+        var client = createClient(runContext, connectTimeout, readTimeout);
         HttpRequest request = buildRequest(runContext, uri, authToken, tenantId)
             .method("POST")
             .build();

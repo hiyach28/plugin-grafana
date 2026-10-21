@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.models.validations.ModelValidator;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
@@ -24,6 +25,9 @@ class TriggerTest {
 
     @Inject
     private RunContextFactory runContextFactory;
+
+    @Inject
+    private ModelValidator modelValidator;
 
     private WireMockServer wireMockServer;
 
@@ -121,6 +125,24 @@ class TriggerTest {
 
         var context = TestsUtils.mockTrigger(runContextFactory, trigger);
 
-        assertThrows(Exception.class, () -> trigger.evaluate(context.getKey(), context.getValue()));
+        var thrown = assertThrows(Exception.class, () -> trigger.evaluate(context.getKey(), context.getValue()));
+
+        ReadTimeoutAssertions.assertCausedByReadTimeout(thrown);
+    }
+
+    @Test
+    void shouldRejectNonPositiveReadTimeout() {
+        var violation = modelValidator.isValid(
+            Trigger.builder()
+                .id("loki-" + IdUtils.create())
+                .type(Trigger.class.getName())
+                .url(Property.ofValue("http://localhost:3100"))
+                .query(Property.ofValue("{job=\"security\"}"))
+                .readTimeout(Property.ofValue(0))
+                .build()
+        );
+
+        assertThat(violation.isPresent(), is(true));
+        assertThat(violation.get().getMessage(), containsString("readTimeout"));
     }
 }

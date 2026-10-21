@@ -5,6 +5,7 @@ import java.util.Map;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.models.validations.ModelValidator;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.TestsUtils;
@@ -23,6 +24,9 @@ class QueryTest {
 
     @Inject
     private RunContextFactory runContextFactory;
+
+    @Inject
+    private ModelValidator modelValidator;
 
     private WireMockServer wireMockServer;
 
@@ -122,7 +126,9 @@ class QueryTest {
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, Map.of());
 
-        assertThrows(Exception.class, () -> task.run(runContext));
+        var thrown = assertThrows(Exception.class, () -> task.run(runContext));
+
+        ReadTimeoutAssertions.assertCausedByReadTimeout(thrown);
     }
 
     @Test
@@ -151,5 +157,32 @@ class QueryTest {
         Query.Output output = task.run(runContext);
 
         assertThat(output.getLogs(), empty());
+    }
+
+    @Test
+    void shouldRejectNonPositiveTimeouts() {
+        var readViolation = modelValidator.isValid(
+            Query.builder()
+                .id("query-" + TestsUtils.randomString())
+                .type(Query.class.getName())
+                .url(Property.ofValue("http://localhost:3100"))
+                .query(Property.ofValue("{job=\"api\"}"))
+                .readTimeout(Property.ofValue(0))
+                .build()
+        );
+        var connectViolation = modelValidator.isValid(
+            Query.builder()
+                .id("query-" + TestsUtils.randomString())
+                .type(Query.class.getName())
+                .url(Property.ofValue("http://localhost:3100"))
+                .query(Property.ofValue("{job=\"api\"}"))
+                .connectTimeout(Property.ofValue(-1))
+                .build()
+        );
+
+        assertThat(readViolation.isPresent(), is(true));
+        assertThat(readViolation.get().getMessage(), containsString("readTimeout"));
+        assertThat(connectViolation.isPresent(), is(true));
+        assertThat(connectViolation.get().getMessage(), containsString("connectTimeout"));
     }
 }
