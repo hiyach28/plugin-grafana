@@ -47,7 +47,7 @@ public abstract class AbstractLokiConnection extends Task {
 
     @Schema(
         title = "HTTP connect timeout",
-        description = "Connection timeout in seconds; defaults to 30"
+        description = "Connection timeout in seconds; minimum 1, defaults to 30"
     )
     @Builder.Default
     @PluginProperty(group = "execution")
@@ -55,7 +55,7 @@ public abstract class AbstractLokiConnection extends Task {
 
     @Schema(
         title = "HTTP read timeout",
-        description = "Read timeout in seconds; defaults to 60"
+        description = "Read timeout in seconds; minimum 1, defaults to 60"
     )
     @Builder.Default
     @PluginProperty(group = "execution")

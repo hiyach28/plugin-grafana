@@ -116,7 +116,7 @@ class QueryTest {
                 }
                 """).withFixedDelay(3000)));
 
-        Query task = Query.builder()
+        var task = Query.builder()
             .id("query-" + TestsUtils.randomString())
             .type(Query.class.getName())
             .url(Property.ofValue(wireMockServer.baseUrl()))
@@ -124,7 +124,7 @@ class QueryTest {
             .readTimeout(Property.ofValue(1))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, Map.of());
+        var runContext = TestsUtils.mockRunContext(runContextFactory, task, Map.of());
 
         var thrown = assertThrows(Exception.class, () -> task.run(runContext));
 
@@ -144,7 +144,7 @@ class QueryTest {
                 }
                 """).withFixedDelay(1000)));
 
-        Query task = Query.builder()
+        var task = Query.builder()
             .id("query-" + TestsUtils.randomString())
             .type(Query.class.getName())
             .url(Property.ofValue(wireMockServer.baseUrl()))
@@ -152,9 +152,9 @@ class QueryTest {
             .readTimeout(Property.ofValue(5))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, Map.of());
+        var runContext = TestsUtils.mockRunContext(runContextFactory, task, Map.of());
 
-        Query.Output output = task.run(runContext);
+        var output = task.run(runContext);
 
         assertThat(output.getLogs(), empty());
     }

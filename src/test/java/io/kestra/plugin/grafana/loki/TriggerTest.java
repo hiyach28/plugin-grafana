@@ -115,7 +115,7 @@ class TriggerTest {
                 }
                 """).withFixedDelay(3000)));
 
-        Trigger trigger = Trigger.builder()
+        var trigger = Trigger.builder()
             .id("loki-" + IdUtils.create())
             .type(Trigger.class.getName())
             .url(Property.ofValue(wireMockServer.baseUrl()))
