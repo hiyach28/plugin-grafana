@@ -4,10 +4,12 @@ import java.util.Map;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import io.kestra.core.junit.annotations.KestraTest;
+import io.kestra.core.models.flows.Flow;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.validations.ModelValidator;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
+import io.kestra.core.serializers.YamlParser;
 import io.kestra.core.utils.TestsUtils;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.AfterEach;
@@ -184,5 +186,29 @@ class QueryTest {
         assertThat(readViolation.get().getMessage(), containsString("readTimeout"));
         assertThat(connectViolation.isPresent(), is(true));
         assertThat(connectViolation.get().getMessage(), containsString("connectTimeout"));
+    }
+
+    @Test
+    void shouldFailBeforeAnyRequestWhenFlowSetsZeroReadTimeout() {
+        var flow = YamlParser.parse(
+            """
+                id: loki_zero_read_timeout
+                namespace: io.kestra.tests
+                tasks:
+                  - id: query
+                    type: io.kestra.plugin.grafana.loki.Query
+                    url: "%s"
+                    query: '{job="api"}'
+                    readTimeout: 0
+                """.formatted(wireMockServer.baseUrl()),
+            Flow.class
+        );
+        var task = (Query) flow.getTasks().getFirst();
+        var runContext = TestsUtils.mockRunContext(runContextFactory, task, Map.of());
+
+        var thrown = assertThrows(Exception.class, () -> task.run(runContext));
+
+        assertThat(thrown.getMessage(), containsString("readTimeout"));
+        wireMockServer.verify(0, anyRequestedFor(anyUrl()));
     }
 }
